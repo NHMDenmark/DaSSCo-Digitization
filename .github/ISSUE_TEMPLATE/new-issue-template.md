@@ -2,7 +2,7 @@
 name: New Issue Template
 about: Add your new ticket to the Issues log with this template
 title: ''
-labels: ''
+labels: Issues log
 assignees: ''
 
 ---
