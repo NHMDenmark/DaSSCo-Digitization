@@ -10,7 +10,8 @@ assignees: ''
 How to create a new issue for the Issues log:
 
 Title: 
-pick a short, precise title for your issue. It should be easily searchable and not too vague. 
+Enter a title in the field above. 
+Pick a short, precise title for your issue. It should be easily searchable and not too vague. 
 EXAMPLE: "Can't enter new subspecies into DigiApp"
 NOT GOOD: "DigiApp Bug"
 
@@ -18,4 +19,4 @@ Description:
 Write a detailed description of your issue, including screenshots etc.
 Remember to also include things like the DigiApp version number or other relevant technical information.
 
-When you're done, click "create" to save the issue to the Issues log :)
+When you're done, you can delete this template text from the issue and click "create" to save the issue to the Issues log :)
