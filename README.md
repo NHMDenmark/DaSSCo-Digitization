@@ -7,3 +7,5 @@ To avoid having copies of these issues on each Repo, we agreed to create this mo
 
 The main project hosted here will be the Digitization Issues Log, which allows Digitizers to record any issues they come across during Digitization. 
 This was orignially an Excel sheet on the OneDrive, but it was decided to move it to GitHub.
+The old Issues Log has been archived to the N-Drive: "N:\SCI-SNM-DigitalCollections\DaSSCo\Active shared documents\Archive versions\Old Issues Log_20250618.xlsx" 
+and can also be found under "Archive version" on the OneDrive.
