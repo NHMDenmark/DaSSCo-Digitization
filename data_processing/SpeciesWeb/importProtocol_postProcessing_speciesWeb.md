@@ -31,7 +31,7 @@ As specimens are digitized, their data will be added to the Species-Web database
 	     - Click OK
 	   - The next time you open MySQL Workbench, you will see dassco-au under MySQL Connections
 
-2. Run the SQL query located here: [Species-Web Export Query](https://github.com/NHMDenmark/DaSSCo-Digitization/data_processing/SpeciesWeb/speciesWebExportQuery.sql), changing the date in this line: 
+2. Run the SQL query located here: [Species-Web Export Query](https://github.com/NHMDenmark/DaSSCo-Digitization/blob/main/data_processing/SpeciesWeb/speciesWebExportQuery.sql), changing the date in this line: 
 
 ``WHERE folders.approved_at > '2025-01-01' LIMIT 100000``
 
@@ -60,7 +60,7 @@ Once the data has been exported, it will need to be checked over to make sure th
 
 ### Post-processing
 
-Post-processing is done via a Python script, located here: [Format Data For Specify](https://github.com/NHMDenmark/DaSSCo-Digitization/data_processing/SpeciesWeb/formatDataForSpecify.py).
+Post-processing is done via a Python script, located here: [Format Data For Specify](https://github.com/NHMDenmark/DaSSCo-Digitization/blob/main/data_processing/SpeciesWeb/formatDataForSpecify.py).
 
 Export files that are ready to be post-processed can be found in the folder: 3.ReadyForOpenRefine/AU_Herbarium, located in the Data folder on the N-drive. As part of the script, between two and three spreadsheets (described below) will be created to be imported to Specify, and the CSV file ending in either _checked or _checked_corrected will be moved to the 6.Archive/AU_Herbarium folder. 
 
@@ -104,7 +104,7 @@ To import synonyms, the synonym importer tool from the Sp7ApiToolbox repository 
 5. You will see a preview of the dataset
 6. Check that everything looks as expected. If it does, click Import File
 7. You need to define the mapping for the dataset. Click Create 
-8. If you have imported DaSSCo export files before, click on Choose Existing Plan (if you do not have access to an existing plan, select Collection Object as a base table and find the mapping plan for the specific collection [here](https://github.com/NHMDenmark/DaSSCo-Digitization/data_processing/Specify/import_workbench_mapping))
+8. If you have imported DaSSCo export files before, click on Choose Existing Plan (if you do not have access to an existing plan, select Collection Object as a base table and find the mapping plan for the specific collection [here](https://github.com/NHMDenmark/DaSSCo-Digitization/blob/main/data_processing/Specify/import_workbench_mapping))
 9. Choose one of the previous imports to use the mapping plan from that import, if not creating a new mapping plan
 10. Check the mapping to see if everything looks as expected. If it does, click Save
 11. The data needs to go through a validation process before being imported. Click on Validate to validate the data
