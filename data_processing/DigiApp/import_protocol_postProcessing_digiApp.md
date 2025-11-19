@@ -34,7 +34,7 @@ As part of the new folder structure, subfolders have been implemented for the se
 
 ### Post-processing
 
-Post-processing is done via a Python script, located here: [Format Data For Specify](https://github.com/NHMDenmark/DaSSCo-Digitization/data_processing/DigiApp/format_data_for_specify). Locate the script that matches the institution/collection you are working on. 
+Post-processing is done via a Python script, located here: [Format Data For Specify](https://github.com/NHMDenmark/DaSSCo-Digitization/blob/main/data_processing/DigiApp/format_data_for_specify). Locate the script that matches the institution/collection you are working on. 
 
 Export files that are ready to be post-processed can be found in the 3.ReadyForOpenRefine folder in the Data folder on the N-drive. There should be no need to check the data in detail before starting the post-processing since the export file should have been checked thoroughly before being moved to this folder.
 
@@ -63,7 +63,7 @@ Export files that are ready to be imported to Specify can be found in the 5.Read
 5. You will see a preview of the dataset
 6. Check that everything looks as expected. If it does, click Import File
 7. You need to define the mapping for the dataset. Click Create
-8. If you have imported DaSSCo export files before, click on Choose Existing Plan (if you do not have access to an existing plan, select Collection Object as a base table and find the mapping plan for the specific collection [here](https://github.com/NHMDenmark/DaSSCo-Digitization/data_processing/Specify/import_workbench_mapping))
+8. If you have imported DaSSCo export files before, click on Choose Existing Plan (if you do not have access to an existing plan, select Collection Object as a base table and find the mapping plan for the specific collection [here](https://github.com/NHMDenmark/DaSSCo-Digitization/blob/main/data_processing/Specify/import_workbench_mapping))
 9. Choose one of the previous imports to use the mapping plan from that import, if not creating a new mapping plan
 10. Check the mapping to see if everything looks as expected. If it does, click Save
 11. The data needs to go through a validation process before being imported. Click on Validate to validate the data
