@@ -226,7 +226,8 @@ Locality ->
 Broad Geographical Region 
 
 localitynotes ->
-NOT MAPPED
+Collecting Information ->
+Locality and Habitat Notes
  
 preptypename ->
 Preparations ->
