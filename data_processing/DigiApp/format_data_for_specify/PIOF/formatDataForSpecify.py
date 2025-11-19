@@ -18,8 +18,7 @@ base_output_folder = os.getenv("OUTPUT_FOLDER")
 base_log_file_path = os.getenv("LOG_FILE_PATH")
 
 # In directory paths, {collection} is replaced with the collection name
-# Change this to switch collections
-collection = 'NHMD_PinnedInsects'
+collection = os.getenv("COLLECTION")
 folder_path = base_folder_path.format(collection=collection)
 archive_folder = base_archive_folder.format(collection=collection)
 output_folder = base_output_folder.format(collection=collection)
