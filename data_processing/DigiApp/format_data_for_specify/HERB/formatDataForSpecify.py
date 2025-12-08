@@ -293,7 +293,10 @@ for filename in os.listdir(folder_path):
         df['localityname'] = df['broadgeographicalregion']
 
         # Convert recorddatetime to datetime
-        df['recorddatetime'] = pd.to_datetime(df['recorddatetime'])
+        df['recorddatetime'] = (
+            pd.to_datetime(df['recorddatetime'], utc=True, errors='coerce')
+            .dt.strftime('%Y-%m-%d')
+        )
         # Extract date and assign to new columns
         df['catalogeddate'] = df['recorddatetime'].dt.date
         df['datafile_date'] = df['recorddatetime'].dt.date
