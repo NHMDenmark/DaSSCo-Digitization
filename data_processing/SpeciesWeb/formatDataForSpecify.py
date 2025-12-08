@@ -501,9 +501,11 @@ for filename in os.listdir(folder_path):
         df['cataloger_lastname'] = None
 
         # Convert the 'date_asset_taken' column to datetime and extract the date in 'YYYY-MM-DD' format
-        # Assign this value to catalogeddate and datafile_date
-        df['catalogeddate'] = pd.to_datetime(df['date_asset_taken']).dt.date.astype(str)
-        df['datafile_date'] = df['catalogeddate']
+        # Assign this value to catalogeddate
+        df['catalogeddate'] = (
+            pd.to_datetime(df['date_asset_taken'], utc=True, errors='coerce')
+            .dt.strftime('%Y-%m-%d')
+        )
 
         # Convert the value in digitiser to cataloger first, middle, and last names 
         df = format_digitiser(df)
