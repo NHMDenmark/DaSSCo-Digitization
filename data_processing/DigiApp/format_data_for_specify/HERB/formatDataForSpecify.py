@@ -30,108 +30,92 @@ os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
 os.makedirs(archive_folder, exist_ok=True)
 
 # Separate the taxonomic fields based on rank_terms found in 'taxonfullname' and extract qualifiers
-
-import re
-import pandas as pd
-
 def parse_taxonfullname(row):
     fullname = str(row.get('taxonfullname', '')).strip()
     rankid = row.get('rankid', None)
 
+    # Initialize result
     result = {'genus': '', 'species': '', 'subspecies': '', 'variety': '', 'forma': ''}
 
-    if not fullname:
+    if not fullname or fullname.lower() == 'nan':
         return pd.Series(result)
 
     parts = fullname.split()
-    result['genus'] = parts[0]  # always genus (unless only family)
+    result['genus'] = parts[0]  # always genus (unless family)
 
     # Remove genus if rankid == 140 (Family)
     if rankid == 140:
         result['genus'] = ''
+        return pd.Series(result)
 
-    # If rankid=180, only genus is used
+    # If rankid = 180 (Genus-level), only genus is used
     if rankid == 180:
         return pd.Series(result)
 
-    # helper: normalized token for comparisons (treat '×' as 'x', remove trailing dot)
+    # -------- helpers --------
     def _norm(tok):
         return tok.replace('×', 'x').lower().rstrip('.')
 
-    # helper: return tokens from start index until next rank marker or an uppercase token (likely author)
-    def _collect_zone(start_idx):
+    def _collect_hybrid_epithet(start_idx):
+        """
+        Collect tokens for one epithet, handling hybrids:
+        - 'x name' or 'name x name'
+        """
+        if start_idx >= len(parts):
+            return []
+
         zone = []
-        i = start_idx
-        while i < len(parts):
-            n = _norm(parts[i])
-            # stop if we hit an infraspecific rank marker
-            if n in ('subsp', 'ssp', 'var', 'forma', 'f'):
-                break
-            # stop at an author-like token (starts with uppercase or open parenthesis)
-            if parts[i][0].isupper() or parts[i][0] == '(':
-                break
-            zone.append(parts[i])
-            i += 1
+
+        # leading hybrid
+        if _norm(parts[start_idx]) == 'x' and start_idx + 1 < len(parts):
+            return parts[start_idx:start_idx + 2]
+
+        zone.append(parts[start_idx])
+
+        # internal hybrid: name x name
+        if start_idx + 2 < len(parts) and _norm(parts[start_idx + 1]) == 'x':
+            zone.extend(parts[start_idx + 1:start_idx + 3])
+
         return zone
 
-    # helper: format an epithet zone into the desired value (handles hybrids)
     def _format_epithet(zone):
-        if not zone:
-            return ''
-        # leading hybrid marker: 'x brucheri'
-        if _norm(zone[0]) == 'x':
-            return zone[0] + (' ' + zone[1] if len(zone) > 1 else '')
-        # hybrid inside zone: 'danica x officinalis' or 'arcuata x vulgaris'
-        if any(_norm(t) == 'x' for t in zone):
-            return ' '.join(zone)
-        # otherwise, just first epithet
-        return zone[0]
-    
-    # -------- subspecies: use positional parsing when rankid = 230 ----------
+        return ' '.join(zone) if zone else ''
+
+    # -------- subspecies (rankid 230, positional) ----------
     if rankid == 230:
-        # species starts at index 1
-        species_zone = _collect_zone(1)
+        # species: start at index 1
+        species_zone = _collect_hybrid_epithet(1)
         result['species'] = _format_epithet(species_zone)
 
-        # subspecies starts immediately after species zone
+        # subspecies: immediately after species
         subsp_start = 1 + len(species_zone)
-        subspecies_zone = _collect_zone(subsp_start)
-        result['subspecies'] = _format_epithet(subspecies_zone)
+        if subsp_start < len(parts) and not parts[subsp_start][0].isupper():
+            subspecies_zone = _collect_hybrid_epithet(subsp_start)
+            result['subspecies'] = _format_epithet(subspecies_zone)
 
         return pd.Series(result)
 
-    # -------- species: extract for every rankid >= 220 ----------
+    # -------- species for rankid >= 220 ----------
     if rankid is not None and rankid >= 220:
-        species_zone = _collect_zone(1)
+        species_zone = _collect_hybrid_epithet(1)
         result['species'] = _format_epithet(species_zone)
 
-    # -------- infraspecifics according to rankid (variety and forma) ----------
-    # if rankid == 230:  # subspecies
-    #     for i, t in enumerate(parts):
-    #         if _norm(t) in ('subsp', 'ssp'):
-    #             subs_zone = _collect_zone(i + 1)
-    #             result['subspecies'] = _format_epithet(subs_zone)
-    #             break
-
-    elif rankid == 240:  # variety
+    # -------- infraspecifics (variety and forma) ----------
+    if rankid == 240:  # variety
         for i, t in enumerate(parts):
             if _norm(t) == 'var':
-                var_zone = _collect_zone(i + 1)
+                var_zone = _collect_hybrid_epithet(i + 1)
                 result['variety'] = _format_epithet(var_zone)
-                # result['variety'] = var_zone[0] if var_zone else ''
                 break
 
     elif rankid == 260:  # forma
         for i, t in enumerate(parts):
             if _norm(t) in ('forma', 'f'):
-                f_zone = _collect_zone(i + 1)
-                result['forma'] = f_zone[0] if f_zone else ''
+                f_zone = _collect_hybrid_epithet(i + 1)
+                result['forma'] = _format_epithet(f_zone)
                 break
 
     return pd.Series(result)
-
-import pandas as pd
-import re
 
 def assign_ishybrid_fields(df):
     for col in ['species', 'subspecies', 'variety', 'forma']:
