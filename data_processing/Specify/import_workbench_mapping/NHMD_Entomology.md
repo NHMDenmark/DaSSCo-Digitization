@@ -176,24 +176,18 @@ Author
 **Match Behavior -> 
   Ignore when Blank**
 
+subspecies_taxonnumber -> 
+NOT MAPPED
+
+subspecies_taxonnrsource -> 
+NOT MAPPED
+
 newsubspeciesflag ->
 Determinations ->
  #1 ->
 Taxon ->
 Subspecies ->
 Check Taxon
-
-variety -> NOT MAPPED
-
-variety_author -> NOT MAPPED
-
-newvarietyflag -> NOT MAPPED
-
-forma -> NOT MAPPED
-
-forma_author -> NOT MAPPED
-
-newformaflag -> NOT MAPPED
 
 qualifier ->
 Determinations ->

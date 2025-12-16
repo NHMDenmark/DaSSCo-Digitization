@@ -86,19 +86,32 @@ def parse_taxonfullname(row):
             return ' '.join(zone)
         # otherwise, just first epithet
         return zone[0]
+    
+    # -------- subspecies: use positional parsing when rankid = 230 ----------
+    if rankid == 230:
+        # species starts at index 1
+        species_zone = _collect_zone(1)
+        result['species'] = _format_epithet(species_zone)
+
+        # subspecies starts immediately after species zone
+        subsp_start = 1 + len(species_zone)
+        subspecies_zone = _collect_zone(subsp_start)
+        result['subspecies'] = _format_epithet(subspecies_zone)
+
+        return pd.Series(result)
 
     # -------- species: extract for every rankid >= 220 ----------
     if rankid is not None and rankid >= 220:
         species_zone = _collect_zone(1)
         result['species'] = _format_epithet(species_zone)
 
-    # -------- infraspecifics according to rankid ----------
-    if rankid == 230:  # subspecies
-        for i, t in enumerate(parts):
-            if _norm(t) in ('subsp', 'ssp'):
-                subs_zone = _collect_zone(i + 1)
-                result['subspecies'] = _format_epithet(subs_zone)
-                break
+    # -------- infraspecifics according to rankid (variety and forma) ----------
+    # if rankid == 230:  # subspecies
+    #     for i, t in enumerate(parts):
+    #         if _norm(t) in ('subsp', 'ssp'):
+    #             subs_zone = _collect_zone(i + 1)
+    #             result['subspecies'] = _format_epithet(subs_zone)
+    #             break
 
     elif rankid == 240:  # variety
         for i, t in enumerate(parts):

@@ -200,6 +200,20 @@ Author
 **Match Behavior -> 
   Ignore when Blank**
 
+subspecies_taxonnumber -> 
+Determinations ->
+ #1 ->
+Taxon ->
+Subspecies ->
+Taxon Key
+
+subspecies_taxonnrsource -> 
+Determinations ->
+ #1 ->
+Taxon ->
+Subspecies ->
+Taxon Key Source
+
 newsubspeciesflag ->
 Determinations ->
  #1 ->

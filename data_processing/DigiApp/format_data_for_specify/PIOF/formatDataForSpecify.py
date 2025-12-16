@@ -29,46 +29,97 @@ os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
 # Ensure the archive folder exists
 os.makedirs(archive_folder, exist_ok=True)
 
-# Extract the genus and species from 'taxonfullname'
-def extract_genus_species(name):
-    parts = name.split()
-    genus = parts[0] if len(parts) > 0 else ''
-    species = parts[1] if len(parts) > 1 else ''
-    return pd.Series([genus, species])
+# Parse taxonfullname into genus, species, and subspecies based on rankid
+def parse_taxon_name(row):
+    result = {'genus': '', 'species': '', 'subspecies': ''}
+
+    fullname = str(row.get('taxonfullname', '')).strip()
+    rankid = row.get('rankid')
+
+    if not fullname or fullname.lower() == 'nan':
+        return pd.Series(result)
+
+    parts = fullname.split()
+    result['genus'] = parts[0]
+
+    # Family
+    if rankid == 140:
+        result['genus'] = ''
+        return pd.Series(result)
+
+    # Genus
+    if rankid == 180:
+        return pd.Series(result)
+
+    def _norm(tok):
+        return tok.replace('×', 'x').lower().rstrip('.')
+
+    def _collect_zone(start_idx):
+        zone = []
+        i = start_idx
+        while i < len(parts):
+            if parts[i][0].isupper() or parts[i][0] == '(':
+                break
+            zone.append(parts[i])
+            i += 1
+        return zone
+
+    def _format_epithet(zone):
+        if not zone:
+            return ''
+        if _norm(zone[0]) == 'x':
+            return zone[0] + (' ' + zone[1] if len(zone) > 1 else '')
+        if any(_norm(t) == 'x' for t in zone):
+            return ' '.join(zone)
+        return zone[0]
+
+    # Species
+    if rankid >= 220:
+        species_zone = _collect_zone(1)
+        result['species'] = _format_epithet(species_zone)
+
+    # Subspecies (strict positional)
+    if rankid == 230:
+        subsp_start = 1 + len(species_zone)
+        subspecies_zone = _collect_zone(subsp_start)
+        result['subspecies'] = _format_epithet(subspecies_zone)
+
+    return pd.Series(result)
 
 # Add author, taxon number, and taxon number source to appropriate columns
-def process_taxon_row(row):
-    parts = row['taxonfullname'].split()
-    genus = parts[0] if len(parts) > 0 else ''
-    species = parts[1] if len(parts) > 1 else ''
-    
-    # Initialize all new columns with empty strings
-    genus_val = species_val = ''
-    genus_author = species_author = ''
-    genus_taxonnumber = species_taxonnumber = ''
-    genus_taxonnrsource = species_taxonnrsource = ''
+def assign_taxon_metadata(row):
+    result = {
+        'genus_author': '',
+        'species_author': '',
+        'subspecies_author': '',
+        'genus_taxonnumber': '',
+        'species_taxonnumber': '',
+        'subspecies_taxonnumber': '',
+        'genus_taxonnrsource': '',
+        'species_taxonnrsource': '',
+        'subspecies_taxonnrsource': ''
+    }
 
-    if row['rankid'] == 180:  # Genus-level
-        genus_val = genus
-        genus_author = row['taxonauthor']
-        genus_taxonnumber = row['taxonnumber']
-        genus_taxonnrsource = row['taxonnrsource']
+    rankid = row.get('rankid')
 
-    elif row['rankid'] == 220:  # Species-level
-        genus_val = genus
-        species_val = species
-        species_author = row['taxonauthor']
-        species_taxonnumber = row['taxonnumber']
-        species_taxonnrsource = row['taxonnrsource']
+    if rankid == 180:
+        result['genus_author'] = row.get('taxonauthor', '')
+        result['genus_taxonnumber'] = row.get('taxonnumber', '')
+        result['genus_taxonnrsource'] = row.get('taxonnrsource', '')
 
-    return pd.Series([
-        genus_val, species_val,
-        genus_author, species_author,
-        genus_taxonnumber, species_taxonnumber,
-        genus_taxonnrsource, species_taxonnrsource
-    ])
+    elif rankid == 220:
+        result['species_author'] = row.get('taxonauthor', '')
+        result['species_taxonnumber'] = row.get('taxonnumber', '')
+        result['species_taxonnrsource'] = row.get('taxonnrsource', '')
 
-# Add new genus and species flags based on taxonspid or taxonomyuncertain
+    elif rankid == 230:
+        result['subspecies_author'] = row.get('taxonauthor', '')
+        result['subspecies_taxonnumber'] = row.get('taxonnumber', '')
+        result['subspecies_taxonnrsource'] = row.get('taxonnrsource', '')
+
+    return pd.Series(result)
+
+# Add new genus, species, and subspecies flags based on taxonspid or taxonomyuncertain
 def set_new_flags(row):
     value = row['taxonspid']
     # Normalize value to string, strip whitespace, and check for known "empty" representations
@@ -79,15 +130,17 @@ def set_new_flags(row):
 
     taxonomy_uncertain = str(row.get('taxonomyuncertain', '')).strip().lower() == 'true'
 
-    newgenusflag = newspeciesflag = ''
+    newgenusflag = newspeciesflag = newsubspeciesflag = ''
 
     if taxonspid_missing_or_zero:
         if row['rankid'] == 180:
             newgenusflag = 'True'
         elif row['rankid'] == 220:
             newspeciesflag = 'True'
+        elif row['rankid'] == 230:
+            newsubspeciesflag = 'True'
 
-    return pd.Series([newgenusflag, newspeciesflag])
+    return pd.Series([newgenusflag, newspeciesflag, newsubspeciesflag])
 
 # Loop through each CSV file in the specified folder_path
 for filename in os.listdir(folder_path):
@@ -120,18 +173,18 @@ for filename in os.listdir(folder_path):
         # Modify the filename to replace 'checked' or 'checked_corrected' with 'processed.tsv'
         updated_filename = re.sub(r'checked(_corrected)?\.csv$', 'processed.tsv', filename)
 
-        # Assign genus and species from 'taxonfullname'
-        df[['genus', 'species']] = df['taxonfullname'].apply(extract_genus_species)
+        # Assign taxonomic fields from 'taxonfullname' to 'genus', 'species', etc.
+        df[['genus', 'species', 'subspecies']] = df.apply(parse_taxon_name, axis=1)
+
 
         df[[
-            'genus', 'species',
-            'genus_author', 'species_author',
-            'genus_taxonnumber', 'species_taxonnumber',
-            'genus_taxonnrsource', 'species_taxonnrsource'
-        ]] = df.apply(process_taxon_row, axis=1)
+            'genus_author', 'species_author', 'subspecies_author', 
+            'genus_taxonnumber', 'species_taxonnumber', 'subspecies_taxonnumber',
+            'genus_taxonnrsource', 'species_taxonnrsource', 'subspecies_taxonnrsource'
+        ]] = df.apply(assign_taxon_metadata, axis=1)
 
         # Add new taxa flags as appropriate
-        df[['newgenusflag', 'newspeciesflag']] = df.apply(set_new_flags, axis=1)
+        df[['newgenusflag', 'newspeciesflag', 'newsubspeciesflag']] = df.apply(set_new_flags, axis=1)
 
         # Rename some of the columns
         df = df.rename(columns={
@@ -201,7 +254,8 @@ for filename in os.listdir(folder_path):
             'specimenobscured_date', 'labelobscured', 'labelobscured_remark', 'labelobscured_source', 'labelobscured_date',
             'publish', 'containername', 'containertype', 'remarks', 'remark_date', 'remark_source', 'family', 'genus',
             'genus_author', 'genus_taxonnumber', 'genus_taxonnrsource', 'newgenusflag', 'species', 'species_author',
-            'species_taxonnumber', 'species_taxonnrsource', 'newspeciesflag', 'typestatusname', 'storedunder',
+            'species_taxonnumber', 'species_taxonnrsource', 'newspeciesflag', 'subspecies', 'subspecies_author',
+            'subspecies_taxonnumber', 'subspecies_taxonnrsource', 'newsubspeciesflag', 'typestatusname', 'storedunder',
             'localityname', 'broadgeographicalregion', 'localitynotes', 'preptypename', 'count', 'datafile_remark',
             'datafile_source', 'datafile_date'
         ]
