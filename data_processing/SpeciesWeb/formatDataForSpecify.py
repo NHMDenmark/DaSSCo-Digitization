@@ -41,34 +41,6 @@ keys_to_extract = [
     "accepted", "class"
 ]
 
-# Extract taxonomy and author from gbif_match_json
-# def extract_json_data(row):
-#     extracted_data = {}
-#     raw_json = row.get('gbif_match_json', '')
-
-#     # Try to normalize and decode double-escaped JSON
-#     try:
-#         # Case 1: looks like normal JSON (has single set of quotes)
-#         if re.search(r'"\w+":', raw_json) and not re.search(r'""\w+""', raw_json):
-#             parsed = json.loads(raw_json)
-#         else:
-#             # Case 2: double-escaped JSON (contains ""key"")
-#             # Unescape the double quotes first
-#             fixed = raw_json.replace('""', '"')
-#             parsed = json.loads(fixed)
-#     except Exception:
-#         # As a fallback, try to parse one more time if it’s quoted inside another string
-#         try:
-#             parsed = json.loads(json.loads(raw_json))
-#         except Exception:
-#             parsed = {}
-
-#     # Extract only the keys of interest
-#     for key in keys_to_extract:
-#         extracted_data[key] = parsed.get(key, None)
-
-#     return pd.Series(extracted_data)
-
 def extract_json_data(row):
     extracted_data = {}
     try:
@@ -100,6 +72,22 @@ def update_genus_and_species(row):
         row['genus'] = row['species'].split()[0] if row['species'].split()[0].istitle() else row['genus']
         # Remove genus from 'species' field if it's present
         row['species'] = ' '.join(row['species'].split()[1:])
+    return row
+
+# Pull correct genus for synonyms at genus rank from scientificName
+def update_genus_for_synonyms(row):
+    """
+    If a record is a SYNONYM at GENUS rank, copy the first word
+    of scientificName into genus.
+    """
+    tax_status = str(row.get('taxonomicStatus', '')).upper()
+    rank = str(row.get('rank', '')).upper()
+    sci_name = str(row.get('scientificName', '')).strip()
+
+    if "SYNONYM" in tax_status and rank == "GENUS" and sci_name:
+        first_word = sci_name.split()[0]
+        row['genus'] = first_word
+
     return row
 
 # Process authorship and taxon source at rank level (for extracted gbif data)
@@ -354,24 +342,6 @@ def format_digitiser(df):
 
     return df
 
-# Fix unicode escape sequences in a string (example: "Gr\u00f6n" instead of "Grön")
-# def fix_encoding_issues(text: str) -> str:
-#     if not isinstance(text, str):
-#         return text
-#     try:
-#         # Step 1 — decode Unicode escape sequences (\uXXXX)
-#         text = codecs.decode(text, "unicode_escape")
-#     except Exception:
-#         pass
-
-#     try:
-#         # Step 2 — fix mojibake from UTF-8 mis-decoding
-#         text = text.encode("latin-1").decode("utf-8")
-#     except Exception:
-#         pass
-
-#     return text
-
 def fix_encoding_issues(s):
     """Fix misencoded characters and decode unicode escapes like \\u00e9 → é."""
     if not isinstance(s, str):
@@ -435,13 +405,6 @@ def replace_semicolons_inside_braces(s):
         content = match.group(1)
         return '{' + content.replace(';', ',') + '}'
     return re.sub(r'\{([^{}]*)\}', replacer, s)
-
-# Replace double quotes around JSON with single quotes
-# def replace_outer_json_quotes(s):
-#     # Replace ;"{...}"; → ;'{...}';
-#     return re.sub(r';"(\{.*?\})";', lambda m: ";'" + m.group(1) + "';", s)
-
-
 
 # Loop through each CSV file in the specified folder_path
 for filename in os.listdir(folder_path):
@@ -512,6 +475,9 @@ for filename in os.listdir(folder_path):
 
         # Update the genus and species fields
         df = df.apply(update_genus_and_species, axis=1)
+
+        # Update genus for synonyms at genus rank
+        df = df.apply(update_genus_for_synonyms, axis=1)
         
         # Replace values in 'authorship' column with NaN if they contain no letters
         df['authorship'] = df['authorship'].apply(
@@ -524,23 +490,6 @@ for filename in os.listdir(folder_path):
 
         # Fill taxonomic fields from speciesweb columns if gbif_match_json is missing or 'null'
         df = df.apply(lambda r: fill_from_speciesweb(r, df), axis=1)
-
-        # # Move rows where gbif_match_json is null to a new df (df_nulls)
-        # # Condition: rows where gbif_match_json == "null"
-        # condition = (df["gbif_match_json"] == "null") | (df["gbif_match_json"].isna())
-        # df_nulls, df = move_rows(df, condition)
-
-        # print(df_nulls)
-
-        # # Rename speciesweb taxonomic columns in df_nulls
-        # df_nulls.rename(columns={'family_speciesweb': 'family', 'genus_speciesweb': 'genus', 'species_speciesweb': 'species',
-        #                          'variety_speciesweb': 'variety', 'subspecies_speciesweb': 'subspecies'}, inplace=True)
-        
-        # # Remove genus from species in df_nulls if species is not blank
-        # df_nulls['species'] = df_nulls.apply(clean_species, axis=1)
-
-        # # Concatenate df_nulls back to df
-        # df = pd.concat([df, df_nulls], ignore_index=True)
 
         # For rows with gbif data, move the author & taxonomic info to the correct columns
         df = df.apply(process_taxonomic_fields, axis=1)
