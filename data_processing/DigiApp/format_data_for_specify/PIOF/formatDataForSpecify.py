@@ -53,36 +53,45 @@ def parse_taxon_name(row):
 
     def _norm(tok):
         return tok.replace('×', 'x').lower().rstrip('.')
+    
+    def _collect_hybrid_epithet(start_idx):
+        """
+        Collects tokens for a single epithet:
+        - 'name'
+        - 'x name'
+        - 'name x name'
+        Stops after completing one epithet.
+        """
+        if start_idx >= len(parts):
+            return []
 
-    def _collect_zone(start_idx):
         zone = []
-        i = start_idx
-        while i < len(parts):
-            if parts[i][0].isupper() or parts[i][0] == '(':
-                break
-            zone.append(parts[i])
-            i += 1
+
+        # leading hybrid: x name
+        if parts[start_idx].lower() == 'x' and start_idx + 1 < len(parts):
+            return parts[start_idx:start_idx + 2]
+
+        zone.append(parts[start_idx])
+
+        # internal hybrid: name x name
+        if start_idx + 2 < len(parts) and parts[start_idx + 1].lower() == 'x':
+            zone.extend(parts[start_idx + 1:start_idx + 3])
+
         return zone
 
-    def _format_epithet(zone):
-        if not zone:
-            return ''
-        if _norm(zone[0]) == 'x':
-            return zone[0] + (' ' + zone[1] if len(zone) > 1 else '')
-        if any(_norm(t) == 'x' for t in zone):
-            return ' '.join(zone)
-        return zone[0]
+    # ---------- species ----------
+    if rankid >= 220 and len(parts) > 1:
+        species_zone = _collect_hybrid_epithet(1)
+        result['species'] = ' '.join(species_zone)
 
-    # Species
-    if rankid >= 220:
-        species_zone = _collect_zone(1)
-        result['species'] = _format_epithet(species_zone)
-
-    # Subspecies (strict positional)
+    # ---------- subspecies ----------
     if rankid == 230:
         subsp_start = 1 + len(species_zone)
-        subspecies_zone = _collect_zone(subsp_start)
-        result['subspecies'] = _format_epithet(subspecies_zone)
+
+        # stop if next token looks like an author
+        if subsp_start < len(parts) and not parts[subsp_start][0].isupper():
+            subspecies_zone = _collect_hybrid_epithet(subsp_start)
+            result['subspecies'] = ' '.join(subspecies_zone)
 
     return pd.Series(result)
 
