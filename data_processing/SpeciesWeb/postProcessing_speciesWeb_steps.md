@@ -43,7 +43,7 @@ Below you will find information on the steps performed by the Python script.
 6. The date in the date_asset_taken column is converted to datetime, extracted in the format YYYY-MM-DD, and added to both the catalogeddate column and the datafile_date column
 7. The name (if any) in the digitiser column is converted to cataloger first, middle, and last name columns
 8. Authorship values that do not contain any letters are converted to null values, in order to compensate for this field occasionally containing a comma or parentheses but no actual author name
-9. The genus is split out of the species column and assigned to the genus column, as this data is more reliable than any value that may be in the genus field of the gbif_match_json results
+9. The genus is split out of the species column and assigned to the genus column, as this data is more reliable than any value that may be in the genus field of the gbif_match_json results. (If the taxonomic rank is genus, we pull this from the scientificName column instead)
 10. In rows where 'gbif_match_json' is null, (in other words, when the taxonomic information was typed in manually in the Species-Web UI), the genus is removed from the species column
 11. In rows where 'gbif_match_json' is null, taxonomic information is copied from columns ending in '_speciesweb' to the appropriate taxonomic level (for example, the value in 'family_speciesweb' is copied to 'family')
 12. Author names are assigned to the appropriate taxonomic levels and source columns are filled with the value 'GBIF'

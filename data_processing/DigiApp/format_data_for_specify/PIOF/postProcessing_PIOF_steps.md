@@ -14,7 +14,7 @@ Below you will find information on the steps performed by the Python script.
 2. The data in the file is read into a pandas dataframe for the script to work with
 3. All numeric columns are converted to Int64 to prevent floats
 4. The filename is stored as a variable (called updated_filename) with either 'checked.csv' or 'checked_corrected.csv' replaced with 'processed.tsv'
-5. The genus and species are extracted from the taxonfullname column and assigned to the corresponding taxonomic column(s)
+5. The genus, species, and subspecies are extracted from the taxonfullname column and assigned to the corresponding taxonomic column(s)
 6. The author, and taxon number and source (if applicable), are assigned to the approrpriate taxonomic rank
 7. If the taxonspid value is '0', null, or empty, or if the taxonomyuncertain value is 'True', the newgenusflag and/or newspeciesflag columns get the 'True' value
 8. The following columns are renamed:
@@ -81,10 +81,16 @@ Below you will find information on the steps performed by the Python script.
      - species_taxonnumber 
      - species_taxonrsource 
      - newspeciesflag
+     - subspecies 
+     - subspecies_author
+     - subspecies_taxonnumber 
+     - subspecies_taxonrsource 
+     - newsubspeciesflag
      - typestatusname
      - storedunder
      - localityname
      - broadgeographicalregion 
+     - localitynotes
      - preptypename 
      - count 
      - datafile_remark
