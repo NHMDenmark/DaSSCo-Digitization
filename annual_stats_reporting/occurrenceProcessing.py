@@ -112,7 +112,7 @@ def process_existing_zip_files(publishers, zip_folder_path):
         dataset_counts = (
             combined_df.groupby("datasetKey")
             .size()
-            .reset_index(name="occurrenceCountTotal")
+            .reset_index(name="totalOccurrences")
         )
         dataset_counts["publisher"] = publisher_name
 
@@ -150,18 +150,18 @@ def process_existing_zip_files(publishers, zip_folder_path):
             all_dataset_counts["duplicatesCountedInOtherDatasets"] = all_dataset_counts["duplicatesCountedInOtherDatasets"].fillna(0).astype(int)
 
         # Compute unique specimen count
-        all_dataset_counts["occurrenceCountUnique"] = (
-            all_dataset_counts["occurrenceCountTotal"] - all_dataset_counts["duplicatesCountedInOtherDatasets"]
+        all_dataset_counts["uniqueOccurrences"] = (
+            all_dataset_counts["totalOccurrences"] - all_dataset_counts["duplicatesCountedInOtherDatasets"]
         ).astype(int)
 
         # Reorder columns in dataset summary df
-        all_dataset_counts = all_dataset_counts[["publisher", "datasetName", "datasetKey", "occurrenceCountTotal", 
-                                                 "occurrenceCountUnique", "duplicatesCountedInOtherDatasets"]]
+        all_dataset_counts = all_dataset_counts[["publisher", "datasetName", "datasetKey", "totalOccurrences", 
+                                                 "uniqueOccurrences", "duplicatesCountedInOtherDatasets"]]
 
         # Convert any floats to ints
         all_dataset_counts["duplicatesCountedInOtherDatasets"] = all_dataset_counts["duplicatesCountedInOtherDatasets"].fillna(0).astype(int)
-        all_dataset_counts["occurrenceCountUnique"] = all_dataset_counts["occurrenceCountUnique"].fillna(0).astype(int)
-        all_dataset_counts["occurrenceCountTotal"] = all_dataset_counts["occurrenceCountTotal"].fillna(0).astype(int)
+        all_dataset_counts["uniqueOccurrences"] = all_dataset_counts["uniqueOccurrences"].fillna(0).astype(int)
+        all_dataset_counts["totalOccurrences"] = all_dataset_counts["totalOccurrences"].fillna(0).astype(int)
 
         # Get total counts for pulisher level summary
         total_preserved_specimens = len(combined_df)
