@@ -89,6 +89,15 @@ def main(input_file, output_file):
     input_df_renamed = input_df[["datasetKey", "publisher", "datasetName"]].rename(columns={"publisher": "datasetPublisher"})
     merged_df = pd.merge(results_df, input_df_renamed, on='datasetKey', how='left')
 
+    # Obtain count of unique publications by dataset
+    unique_publications_by_dataset = (
+        merged_df
+        .groupby(['datasetPublisher', 'datasetName', 'datasetKey'])['title']
+        .nunique()
+        .reset_index()
+        .rename(columns={'title': 'unique_publications_count'})
+    )
+
     # Obtain total count of unique publications
     unique_publications_count = merged_df['title'].nunique()
     print(f"Total count of unique publications: {unique_publications_count}")
@@ -103,7 +112,20 @@ def main(input_file, output_file):
     # Save subsets to separate sheets in same excel file; counts should also be saved in separate sheet
     with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
         merged_df.to_excel(writer, sheet_name='All Publications', index=False)
-        unique_publications_by_publisher.to_excel(writer, sheet_name='Unique Publications Count', index=False)
+
+        # counts by publisher
+        unique_publications_by_publisher.to_excel(
+            writer,
+            sheet_name='Unique Count by Publisher',
+            index=False
+        )
+
+        # counts by dataset
+        unique_publications_by_dataset.to_excel(
+            writer,
+            sheet_name='Unique Count by Dataset',
+            index=False
+        )
         
         for publisher, group in publisher_groups:
             # Get unique publications only
