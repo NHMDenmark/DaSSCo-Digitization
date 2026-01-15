@@ -146,6 +146,8 @@ Determinations ->
 Taxon ->
 Genus ->
 Check Taxon 
+**Match Behavior -> 
+  Always Ignore**
 
 species ->
 Determinations ->
@@ -183,6 +185,8 @@ Determinations ->
 Taxon ->
 Species ->
 Check Taxon
+**Match Behavior -> 
+  Always Ignore**
 
 subspecies ->
 Determinations ->
@@ -220,6 +224,8 @@ Determinations ->
 Taxon ->
 Subspecies ->
 Check Taxon
+**Match Behavior -> 
+  Always Ignore**
 
 variety -> NOT MAPPED
 

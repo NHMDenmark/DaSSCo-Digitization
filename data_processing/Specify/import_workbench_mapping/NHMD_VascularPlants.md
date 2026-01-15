@@ -118,6 +118,8 @@ Determinations ->
 Taxon ->
 Genus ->
 Check Taxon 
+**Match Behavior -> 
+  Always Ignore**
 
 species ->
 Determinations ->
@@ -141,6 +143,8 @@ Determinations ->
 Taxon ->
 Species ->
 Check Taxon
+**Match Behavior -> 
+  Always Ignore**
 
 ishybrid_species ->
 Determinations ->
@@ -173,6 +177,8 @@ Determinations ->
 Taxon ->
 Subspecies ->
 Check Taxon
+**Match Behavior -> 
+  Always Ignore**
 
 ishybrid_subspecies ->
 Determinations ->
@@ -205,6 +211,8 @@ Determinations ->
 Taxon ->
 variety ->
 Check Taxon
+**Match Behavior -> 
+  Always Ignore**
 
 ishybrid_variety ->
 Determinations ->
@@ -237,6 +245,8 @@ Determinations ->
 Taxon ->
 forma ->
 Check Taxon
+**Match Behavior -> 
+  Always Ignore**
 
 ishybrid_forma ->
 Determinations ->
