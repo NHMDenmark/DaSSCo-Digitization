@@ -17,16 +17,22 @@ end_date = os.getenv("END_DATE")
 
 database1 = os.getenv("DATABASE1")  
 database2 = os.getenv("DATABASE2")  
-db_path1 = os.getenv("DB_PATH1")
-db_path2 = os.getenv("DB_PATH2")
 
-# Construct the folder path dynamically (update the version as needed)
-folder_path = os.getenv("FOLDER_PATH")
+base_db_path1 = os.getenv("DB_PATH1")
+base_db_path2 = os.getenv("DB_PATH2")
+db_path1 = base_db_path1.format(database1=database1)
+db_path2 = base_db_path2.format(database2=database2)
+
+# Construct the folder path dynamically (update the version in the .env as needed)
+base_folder_path = os.getenv("FOLDER_PATH")
+folder_path = base_folder_path.format(collection=collection)
+
+output_path = os.getenv("OUTPUT_PATH")
 
 # Output CSVs for missing and found barcodes
 today = datetime.today().strftime('%Y%m%d')
-output_missing_csv = f'{collection}_{today}_barcodesMissingFromDB.csv'
-output_found_csv = f'{collection}_{today}_foundBarcodesWithSource.csv'
+output_missing_csv = f'{output_path}/{collection}_{today}_barcodesMissingFromDB.csv'
+output_found_csv = f'{output_path}/{collection}_{today}_foundBarcodesWithSource.csv'
 
 # Initialize lists to hold missing barcodes and all barcodes with their metadata
 all_missing_barcodes = []
