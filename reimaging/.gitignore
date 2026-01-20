@@ -5,3 +5,8 @@ venv/
 # Ignore environment variable files
 .env
 
+# Ignore specific sub-folders
+archive
+
+# Ignore other filetypes
+*.csv
