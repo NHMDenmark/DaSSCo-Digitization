@@ -9,7 +9,7 @@ backup
 Every quarter, a list of barcoded specimens without images will be added to the appropriate QA_Images_Issues spreadsheet, and the storage locations and taxonomy will be added to this spreadsheet for all specimens that need to be reimaged. 
 
 For adding images missing:
-1. The script to compile a list of specimens missing images is [searchBarcodesInDatabase.py](reimaging\missing_images\searchBarcodesInDatabases.py).
+1. The script to compile a list of specimens missing images is [searchBarcodesInDatabase.py](missing_images/searchBarcodesInDatabases.py).
 2. The following variables will need to be adjusted in the .env file each time the script is run: collection, start_date, end_date, database1, database2, folder_path. The date fields specify a date range to search, and the others are all collection-dependent. The folder_path links to the DigiApp data archive folder.
 3. Two csv files are generated each time the script is run: [collection]_[date]_foundBarcodesWithSource.csv and [collection]_[date]_barcodesMissingFromDB.csv. The missing csv will include barcodes and DigiApp exports they are found in. The found csv will include these items, as well as the database the barcode was found in.
 4. Sometimes an entire DigiApp export will be missing from the database. Usually this just means that those images have not been ingested yet. Further research is needed before these are added to the QA_Images_Issues spreadsheet.
@@ -26,7 +26,7 @@ The spreadsheets are ready when they are in the 2_QA_done folder.
 
 1. Make a copy of the QA_Images_Issues spreadsheet, add today's date to the end in YYYYMMDD format, and move it to 'backup' folder.
 
-2. Update file_path in .env file and run [addLocationAndTaxonomy.py](reimaging\add_location_and_taxonomy\addLocationAndTaxonomy.py).
+2. Update file_path in .env file and run [addLocationAndTaxonomy.py](add_location_and_taxonomy/addLocationAndTaxonomy.py).
 
 3. Open updated workbook in excel and create new column 'Status' after 'Follow-up Action Required' on Specimens tab.
 
