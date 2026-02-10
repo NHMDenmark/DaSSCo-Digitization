@@ -206,29 +206,29 @@ def read_specimens_xlsx(file_path, base_directory, db_directory):
         print(f"Error processing Excel file: {e}")
         return pd.DataFrame()
     
-# Add excel formulas
-def add_excel_formulas(file_path):
-    wb = load_workbook(file_path)
+# # Add excel formulas
+# def add_excel_formulas(file_path):
+#     wb = load_workbook(file_path)
 
-    # --- Add date_reimaged formulas ---
-    for sheet_name in wb.sheetnames:
-        if sheet_name.startswith("Reimage_Needed_"):
-            ws = wb[sheet_name]
-            headers = [cell.value for cell in ws[1]]
-            if 'reimaged' in headers and 'date_reimaged' in headers:
-                reimaged_col = headers.index('reimaged') + 1
-                date_col = headers.index('date_reimaged') + 1
-                for row in range(2, ws.max_row + 1):
-                    reimaged_coord = ws.cell(row=row, column=reimaged_col).coordinate
-                    # Use English formulas with commas
-                    ws.cell(row=row, column=date_col).value = (
-                        f'=IF(LOWER({reimaged_coord})="yes",TODAY(),"")'
-                    )
-                    ws.cell(row=row, column=date_col).number_format = "YYYY-MM-DD"
+#     # --- Add date_reimaged formulas ---
+#     for sheet_name in wb.sheetnames:
+#         if sheet_name.startswith("Reimage_Needed_"):
+#             ws = wb[sheet_name]
+#             headers = [cell.value for cell in ws[1]]
+#             if 'reimaged' in headers and 'date_reimaged' in headers:
+#                 reimaged_col = headers.index('reimaged') + 1
+#                 date_col = headers.index('date_reimaged') + 1
+#                 for row in range(2, ws.max_row + 1):
+#                     reimaged_coord = ws.cell(row=row, column=reimaged_col).coordinate
+#                     # Use English formulas with commas
+#                     ws.cell(row=row, column=date_col).value = (
+#                         f'=IF(LOWER({reimaged_coord})="yes",TODAY(),"")'
+#                     )
+#                     ws.cell(row=row, column=date_col).number_format = "YYYY-MM-DD"
 
-    wb.save(file_path)
+#     wb.save(file_path)
 
 
 df = read_specimens_xlsx(file_path, base_directory, db_directory)
 print(df.head())
-add_excel_formulas(file_path)
+#add_excel_formulas(file_path)
