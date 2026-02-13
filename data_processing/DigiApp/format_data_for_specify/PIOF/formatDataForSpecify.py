@@ -182,6 +182,21 @@ for filename in os.listdir(folder_path):
         # Modify the filename to replace 'checked' or 'checked_corrected' with 'processed.tsv'
         updated_filename = re.sub(r'checked(_corrected)?\.csv$', 'processed.tsv', filename)
 
+        # --- Validate rankid before processing ---
+        missing_rankid = df['rankid'].isna()
+
+        if missing_rankid.any():
+            bad_rows = df.loc[missing_rankid, ['taxonfullname', 'rankid']]
+            row_numbers = (bad_rows.index + 2).tolist()  # +2 for Excel row numbers incl. header
+
+            raise ValueError(
+                "ERROR: One or more rows are missing a required 'rankid' value.\n"
+                f"Please correct the spreadsheet and re-run the script.\n"
+                f"Source file: {filename}\n"
+                f"Affected Excel row(s): {row_numbers}\n"
+                f"Example rows:\n{bad_rows.head(5)}"
+            )
+        
         # Assign taxonomic fields from 'taxonfullname' to 'genus', 'species', etc.
         df[['genus', 'species', 'subspecies']] = df.apply(parse_taxon_name, axis=1)
 

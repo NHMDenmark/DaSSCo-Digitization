@@ -245,6 +245,21 @@ for filename in os.listdir(folder_path):
         df['taxonfullname'] = df['taxonfullname'].str.replace(r'\b(cf|aff|sp)(\.?)(?=\s|$|[,.])\s*', '', regex=True)
         df['taxonfullname'] = df['taxonfullname'].str.replace(r'\s{2,}', ' ', regex=True).str.strip()
 
+        # --- Validate rankid before processing ---
+        missing_rankid = df['rankid'].isna()
+
+        if missing_rankid.any():
+            bad_rows = df.loc[missing_rankid, ['taxonfullname', 'rankid']]
+            row_numbers = (bad_rows.index + 2).tolist()  # +2 for Excel row numbers incl. header
+
+            raise ValueError(
+                "ERROR: One or more rows are missing a required 'rankid' value.\n"
+                f"Please correct the spreadsheet and re-run the script.\n"
+                f"Source file: {filename}\n"
+                f"Affected Excel row(s): {row_numbers}\n"
+                f"Example rows:\n{bad_rows.head(5)}"
+            )
+        
         # Assign taxonomic fields from 'taxonfullname' to 'genus', 'species', etc.
         parsed_taxa = df.apply(parse_taxonfullname, axis=1)
         df = pd.concat([df, parsed_taxa], axis=1)
