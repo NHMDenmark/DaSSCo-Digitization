@@ -157,6 +157,7 @@ for filename in os.listdir(folder_path):
     if filename.endswith('.csv'):
         # Read the CSV file with semicolon delimiter
         file_path = os.path.join(folder_path, filename)
+        print(f"Processing file: {file_path}")
         try:
             # First try reading with semicolon
             df = pd.read_csv(file_path, delimiter=';')
