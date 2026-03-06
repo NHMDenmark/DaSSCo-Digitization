@@ -171,9 +171,11 @@ def read_specimens_xlsx(file_path, base_directory, db_directory):
         extracted_data = df.apply(search_and_extract, axis=1)
         new_df = pd.concat([df, extracted_data], axis=1)
 
-        # Ensure column order: reimaged (blank), barcode, taxonfullname, storagefullname, then all others
-        new_df['reimaged'] = ''  # create new blank column for tracking status if not present
-        new_df['date_reimaged'] = ''  # create new blank column for tracking date_reimaged if not present
+        # Create new columns for tracking reimaging status and date, and reorder columns
+        new_df['reimaged'] = ''  # create new blank column for tracking status
+        new_df['date_reimaged'] = ''  # create new blank column for tracking date_reimaged
+        new_df['new_barcode'] = ''  # create new blank column for tracking new barcode if needed
+        new_df['digitizer_comment'] = ''  # create new blank column for tracking digitizer comments during reimaging
 
         # Define preferred column order
         preferred_order = ['reimaged', 'date_reimaged', 'Barcode', 'taxonfullname', 'storagename', 'Follow-up Action Required']
