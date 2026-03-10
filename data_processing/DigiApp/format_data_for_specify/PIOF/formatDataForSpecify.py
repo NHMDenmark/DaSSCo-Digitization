@@ -218,7 +218,7 @@ for filename in os.listdir(folder_path):
             'agentfirstname': 'cataloger_firstname',
             'agentmiddleinitial': 'cataloger_middle',
             'agentlastname': 'cataloger_lastname',
-            'notes': 'remarks'
+            'specimennotes': 'remarks'
         })
 
         # Replace the string 'None' with an empty string in cataloger_middle

@@ -190,10 +190,10 @@ def split_storage_info(row):
     return pd.Series([collection, cabinet, shelf, box])
 
 def extract_phrases_from_notes(df):
-    # Ensure 'notes' is string type
-    df['notes'] = df['notes'].fillna('').astype(str)
+    # Ensure 'specimennotes' is string type
+    df['specimennotes'] = df['specimennotes'].fillna('').astype(str)
 
-    df['addendum'] = df['notes'].apply(
+    df['addendum'] = df['specimennotes'].apply(
         lambda x: 'sensu lato' if 'sensu lato' in x else (
             'sensu stricto' if 'sensu stricto' in x else ''
         )
@@ -201,10 +201,10 @@ def extract_phrases_from_notes(df):
     
     # For sensu phrases
     for phrase in ['sensu lato', 'sensu stricto']:
-        df['notes'] = df['notes'].str.replace(phrase, '', regex=False)
+        df['specimennotes'] = df['specimennotes'].str.replace(phrase, '', regex=False)
 
     # Clean up whitespace
-    df['notes'] = df['notes'].str.strip()
+    df['specimennotes'] = df['specimennotes'].str.strip()
 
     return df
 
@@ -286,7 +286,7 @@ for filename in os.listdir(folder_path):
         # Split storage information into collection, cabinet, shelf, and box
         df[['collection', 'cabinet', 'shelf', 'box']] = df.apply(split_storage_info, axis=1)
 
-        # Move specific verbiage from 'notes' to other columns
+        # Move specific verbiage from 'specimennotes' to other columns
         df = extract_phrases_from_notes(df)
 
         # Rename some of the columns
@@ -296,7 +296,7 @@ for filename in os.listdir(folder_path):
             'agentfirstname': 'cataloger_firstname',
             'agentmiddleinitial': 'cataloger_middle',
             'agentlastname': 'cataloger_lastname',
-            'notes': 'remarks'
+            'specimennotes': 'remarks'
         })
 
         # Replace the string 'None' with an empty string in cataloger_middle
