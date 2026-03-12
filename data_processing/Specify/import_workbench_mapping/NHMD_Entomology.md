@@ -227,7 +227,7 @@ Broad Geographical Region
 
 localitynotes ->
 Collecting Information ->
-Locality and Habitat Notes
+Habitat Notes
  
 preptypename ->
 Preparations ->
