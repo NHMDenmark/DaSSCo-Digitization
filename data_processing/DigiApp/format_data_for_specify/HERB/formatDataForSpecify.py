@@ -176,7 +176,7 @@ def split_storage_info(row):
     collection = cabinet = shelf = box = ''
     
     if len(parts) >= 3:
-        collection = parts[2].strip()
+        collection = parts[1].strip()
 
         for part in parts[3:]:  # look at the remaining parts for cabinet/shelf/box
             part = part.strip()
