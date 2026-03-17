@@ -29,69 +29,72 @@ os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
 # Ensure the archive folder exists
 os.makedirs(archive_folder, exist_ok=True)
 
-# Parse taxonfullname into genus, species, and subspecies based on rankid
-def parse_taxon_name(row):
+# Separate the taxonomic fields based on rank_terms found in 'taxonfullname' and extract qualifiers
+def parse_taxonfullname(row):
+    fullname = str(row.get('taxonfullname', '')).strip()
+    rankid = row.get('rankid', None)
+
     result = {'genus': '', 'species': '', 'subspecies': ''}
 
-    fullname = str(row.get('taxonfullname', '')).strip()
-    rankid = row.get('rankid')
-
-    if not fullname or fullname.lower() == 'nan':
+    if not fullname:
         return pd.Series(result)
 
     parts = fullname.split()
-    result['genus'] = parts[0]
+    result['genus'] = parts[0]  # always genus (unless only family)
 
-    # Family
+    # Remove genus if rankid == 140 (Family)
     if rankid == 140:
         result['genus'] = ''
-        return pd.Series(result)
 
-    # Genus
+    # If rankid=180, only genus is used
     if rankid == 180:
         return pd.Series(result)
 
+    # helper: normalized token for comparisons (treat '×' as 'x', remove trailing dot)
     def _norm(tok):
         return tok.replace('×', 'x').lower().rstrip('.')
-    
-    def _collect_hybrid_epithet(start_idx):
-        """
-        Collects tokens for a single epithet:
-        - 'name'
-        - 'x name'
-        - 'name x name'
-        Stops after completing one epithet.
-        """
-        if start_idx >= len(parts):
-            return []
 
+    # helper: return tokens from start index until next rank marker or an uppercase token (likely author)
+    def _collect_zone(start_idx):
         zone = []
-
-        # leading hybrid: x name
-        if parts[start_idx].lower() == 'x' and start_idx + 1 < len(parts):
-            return parts[start_idx:start_idx + 2]
-
-        zone.append(parts[start_idx])
-
-        # internal hybrid: name x name
-        if start_idx + 2 < len(parts) and parts[start_idx + 1].lower() == 'x':
-            zone.extend(parts[start_idx + 1:start_idx + 3])
-
+        i = start_idx
+        while i < len(parts):
+            n = _norm(parts[i])
+            # stop if we hit an infraspecific rank marker
+            if n in ('subsp', 'ssp'):
+                break
+            # stop at an author-like token (starts with uppercase or open parenthesis)
+            if parts[i][0].isupper() or parts[i][0] == '(':
+                break
+            zone.append(parts[i])
+            i += 1
         return zone
 
-    # ---------- species ----------
-    if rankid >= 220 and len(parts) > 1:
-        species_zone = _collect_hybrid_epithet(1)
-        result['species'] = ' '.join(species_zone)
+    # helper: format an epithet zone into the desired value (handles hybrids)
+    def _format_epithet(zone):
+        if not zone:
+            return ''
+        # leading hybrid marker: 'x brucheri'
+        if _norm(zone[0]) == 'x':
+            return zone[0] + (' ' + zone[1] if len(zone) > 1 else '')
+        # hybrid inside zone: 'danica x officinalis' or 'arcuata x vulgaris'
+        if any(_norm(t) == 'x' for t in zone):
+            return ' '.join(zone)
+        # otherwise, just first epithet
+        return zone[0]
 
-    # ---------- subspecies ----------
-    if rankid == 230:
-        subsp_start = 1 + len(species_zone)
+    # -------- species: extract for every rankid >= 220 ----------
+    if rankid is not None and rankid >= 220:
+        species_zone = _collect_zone(1)
+        result['species'] = _format_epithet(species_zone)
 
-        # stop if next token looks like an author
-        if subsp_start < len(parts) and not parts[subsp_start][0].isupper():
-            subspecies_zone = _collect_hybrid_epithet(subsp_start)
-            result['subspecies'] = ' '.join(subspecies_zone)
+    # -------- infraspecifics according to rankid ----------
+    if rankid == 230:  # subspecies
+        for i, t in enumerate(parts):
+            if _norm(t) in ('subsp', 'ssp'):
+                subs_zone = _collect_zone(i + 1)
+                result['subspecies'] = _format_epithet(subs_zone)
+                break
 
     return pd.Series(result)
 
@@ -199,7 +202,7 @@ for filename in os.listdir(folder_path):
             )
         
         # Assign taxonomic fields from 'taxonfullname' to 'genus', 'species', etc.
-        df[['genus', 'species', 'subspecies']] = df.apply(parse_taxon_name, axis=1)
+        df[['genus', 'species', 'subspecies']] = df.apply(parse_taxonfullname, axis=1)
 
 
         df[[
