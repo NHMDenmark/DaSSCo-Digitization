@@ -98,7 +98,7 @@ def parse_taxonfullname(row):
 
     elif rankid == 240:  # variety
         for i, t in enumerate(parts):
-            if _norm(t) == 'var':
+            if _norm(t) == ('var', 'v'):
                 var_zone = _collect_zone(i + 1)
                 result['variety'] = _format_epithet(var_zone)
                 break
@@ -145,7 +145,7 @@ def set_new_flags(row):
         pd.isnull(value) or cleaned_value in {'', '0', 'None'}
     )
 
-    taxonomy_uncertain = str(row.get('taxonomyuncertain', '')).strip().lower() == 'true'
+    taxonomy_uncertain = str(row.get('taxonomyuncertain', '')).strip().lower() in ('true', '1')
 
     newgenusflag = newspeciesflag = newsubspeciesflag = newvarietyflag = newformaflag = ''
 
