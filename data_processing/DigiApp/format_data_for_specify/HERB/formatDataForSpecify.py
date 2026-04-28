@@ -168,21 +168,43 @@ def split_storage_info(row):
     parts = str(row['storagefullname']).split(' | ')
     
     # Initialize output fields
-    collection = cabinet = shelf = box = ''
+    collection = room = aisle = cabinet = shelf = box = ''
     
-    if len(parts) >= 3:
-        collection = parts[1].strip()
+    if len(parts) >= 2:
+        collection = parts[0].strip()
+        room = parts[1].strip()
 
-        for part in parts[3:]:  # look at the remaining parts for cabinet/shelf/box
-            part = part.strip()
-            if part.lower().startswith('cabinet '):
+        # --- Find AISLE (first occurrence) ---
+        for part in parts[2:]:
+            part_clean = part.strip().lower()
+            if part_clean.startswith('cabinet ') or part_clean.startswith('box '):
+                aisle = part.strip()
+                break
+
+        # --- Find most specific values (last occurrence) ---
+        for part in reversed(parts):
+            part_clean = part.strip().lower()
+
+            if not cabinet and part_clean.startswith('cabinet '):
                 cabinet = part.split(' ', 1)[1].strip()
-            elif part.lower().startswith('shelf '):
-                shelf = part.split(' ', 1)[1].strip()
-            elif part.lower().startswith('box '):
+
+            elif not box and part_clean.startswith('box '):
                 box = part.split(' ', 1)[1].strip()
 
-    return pd.Series([collection, cabinet, shelf, box])
+            elif not shelf and part_clean.startswith('shelf '):
+                shelf = part.split(' ', 1)[1].strip()
+
+            if cabinet and box and shelf:
+                break
+
+    return pd.Series({
+    'collection': collection,
+    'room': room,
+    'aisle': aisle,
+    'cabinet': cabinet,
+    'shelf': shelf,
+    'box': box
+    })
 
 def extract_phrases_from_notes(df):
     # Ensure 'specimennotes' is string type
@@ -278,8 +300,8 @@ for filename in os.listdir(folder_path):
         # Add new taxa flags as appropriate (taxonspid is null or 0, or taxonomyuncertain is True)
         df[['newgenusflag', 'newspeciesflag', 'newsubspeciesflag', 'newvarietyflag', 'newformaflag']] = df.apply(set_new_flags, axis=1)
 
-        # Split storage information into collection, cabinet, shelf, and box
-        df[['collection', 'cabinet', 'shelf', 'box']] = df.apply(split_storage_info, axis=1)
+        # Split storage information into collection, room, aisle, cabinet, shelf, and box
+        df = df.join(df.apply(split_storage_info, axis=1))
 
         # Move specific verbiage from 'specimennotes' to other columns
         df = extract_phrases_from_notes(df)
@@ -314,6 +336,7 @@ for filename in os.listdir(folder_path):
         df['publish'] = 'True'
         df['count'] = 1
         df['storedunder'] = 'True'
+        df['site/building'] = 'Priorparken'
         df['datafile_source'] = 'DaSSCo data file'
 
         # Add a column with the updated filename
@@ -355,7 +378,7 @@ for filename in os.listdir(folder_path):
             'subspecies_author', 'newsubspeciesflag', 'ishybrid_subspecies', 'variety', 'variety_author', 'newvarietyflag', 
             'ishybrid_variety', 'forma', 'forma_author', 'newformaflag', 'ishybrid_forma', 'qualifier', 'addendum', 
             'typestatusname', 'storedunder', 'localityname', 'broadgeographicalregion', 'localitynotes', 'preptypename', 
-            'count', 'collection', 'cabinet', 'shelf', 'box', 'datafile_remark', 'datafile_source', 'datafile_date'
+            'count', 'site/building', 'collection', 'room', 'aisle', 'cabinet', 'shelf', 'box', 'datafile_remark', 'datafile_source', 'datafile_date'
         ]
 
         # Ensure all columns in `desired_columns` exist in the DataFrame
