@@ -302,11 +302,32 @@ Preparations ->
  #1 ->
 Count
 
+site/building ->
+Preparations ->
+ #1 ->
+Storage ->
+Site/Building ->
+Name
+
 collection ->
 Preparations ->
  #1 ->
 Storage ->
 Collection ->
+Name
+
+room ->
+Preparations ->
+ #1 ->
+Storage ->
+Room ->
+Name
+
+aisle ->
+Preparations ->
+ #1 ->
+Storage ->
+Aisle ->
 Name
 
 cabinet ->
