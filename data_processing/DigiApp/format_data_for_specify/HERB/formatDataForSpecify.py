@@ -98,7 +98,7 @@ def parse_taxonfullname(row):
 
     elif rankid == 240:  # variety
         for i, t in enumerate(parts):
-            if _norm(t) == ('var', 'v'):
+            if _norm(t) in ('var', 'v'):
                 var_zone = _collect_zone(i + 1)
                 result['variety'] = _format_epithet(var_zone)
                 break
