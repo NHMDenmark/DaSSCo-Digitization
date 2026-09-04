@@ -12,8 +12,7 @@ from dotenv import load_dotenv
 
 # Load environment variables from the .env file
 load_dotenv()
-
-# file_path = 'N:/SCI-SNM-DigitalCollections/DaSSCo/Workflows and workstations/Quality assurance and control/QA_Images_Issues.xlsx'  
+ 
 file_path = os.getenv("FILE_PATH")
 base_directory = os.getenv("BASE_DIRECTORY")  
 db_directory = os.getenv("DB_DIRECTORY")

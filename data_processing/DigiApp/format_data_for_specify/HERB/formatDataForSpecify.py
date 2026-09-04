@@ -207,20 +207,47 @@ def split_storage_info(row):
     })
 
 def extract_phrases_from_notes(df):
+
     # Ensure 'specimennotes' is string type
     df['specimennotes'] = df['specimennotes'].fillna('').astype(str)
 
+    # Extract C1 catalog number
+    df['alt_catalognumber'] = df['specimennotes'].str.extract(
+        r'\b(C1\d{7})\b',
+        expand=False
+    ).fillna('')
+
+    # Remove the C1 catalog number and surrounding punctuation
+    df['specimennotes'] = df['specimennotes'].str.replace(
+        r'[;,()]?\s*C1\d{7}\s*[;,()]?',
+        '',
+        regex=True
+    )
+
+    # Clean up whitespace and leftover punctuation
+    df['specimennotes'] = (
+        df['specimennotes']
+        .str.replace(r'\s+', ' ', regex=True)
+        .str.replace(r'\(\s*\)', '', regex=True)
+        .str.replace(r'[;,]\s*[;,]', ',', regex=True)
+        .str.strip(' ,;()')
+        .str.strip()
+    )
+
+    # Extract sensu phrases
     df['addendum'] = df['specimennotes'].apply(
         lambda x: 'sensu lato' if 'sensu lato' in x else (
             'sensu stricto' if 'sensu stricto' in x else ''
         )
     )
-    
-    # For sensu phrases
-    for phrase in ['sensu lato', 'sensu stricto']:
-        df['specimennotes'] = df['specimennotes'].str.replace(phrase, '', regex=False)
 
-    # Clean up whitespace
+    # Remove sensu phrases
+    for phrase in ['sensu lato', 'sensu stricto']:
+        df['specimennotes'] = df['specimennotes'].str.replace(
+            phrase, '', regex=False
+        )
+
+    # Clean up whitespace again
     df['specimennotes'] = df['specimennotes'].str.strip()
 
     return df
@@ -370,7 +397,7 @@ for filename in os.listdir(folder_path):
 
         # Specify the order of columns for the final tsv file
         column_order = [
-            'catalognumber', 'catalogeddate', 'cataloger_firstname', 'cataloger_middle', 'cataloger_lastname',
+            'catalognumber', 'alt_catalognumber', 'catalogeddate', 'cataloger_firstname', 'cataloger_middle', 'cataloger_lastname',
             'project', 'objectcondition', 'specimenobscured', 'specimenobscured_remark', 'specimenobscured_source',
             'specimenobscured_date', 'labelobscured', 'labelobscured_remark', 'labelobscured_source', 'labelobscured_date',
             'publish', 'containername', 'containertype', 'remarks', 'remark_date', 'remark_source', 'family', 'genus',
