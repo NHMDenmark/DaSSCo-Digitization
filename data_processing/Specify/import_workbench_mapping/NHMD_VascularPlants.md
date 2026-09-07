@@ -7,6 +7,9 @@ Below you will find the workbench mapping plan for the DaSSCo digitisation data 
 catalognumber ->
 Catalog Number
 
+alt_catalognumber ->
+Alt Cat Number
+
 catalogeddate ->
 Cataloged Date
 
