@@ -74,12 +74,16 @@ def parse_taxonfullname(row):
     def _format_epithet(zone):
         if not zone:
             return ''
+
         # leading hybrid marker: 'x brucheri'
         if _norm(zone[0]) == 'x':
             return zone[0] + (' ' + zone[1] if len(zone) > 1 else '')
-        # hybrid inside zone: 'danica x officinalis' or 'arcuata x vulgaris'
+
+        # hybrid inside zone: 'danica x officinalis'
+        # or 'arcuata x vulgaris'
         if any(_norm(t) == 'x' for t in zone):
             return ' '.join(zone)
+
         # otherwise, just first epithet
         return zone[0]
 
@@ -88,27 +92,28 @@ def parse_taxonfullname(row):
         species_zone = _collect_zone(1)
         result['species'] = _format_epithet(species_zone)
 
-    # -------- infraspecifics according to rankid ----------
-    if rankid == 230:  # subspecies
-        for i, t in enumerate(parts):
-            if _norm(t) in ('subsp', 'ssp'):
-                subs_zone = _collect_zone(i + 1)
-                result['subspecies'] = _format_epithet(subs_zone)
-                break
+    # -------- infraspecific designations ----------
+    
+    # Subspecies
+    for i, t in enumerate(parts):
+        if _norm(t) in ('subsp', 'ssp'):
+            subs_zone = _collect_zone(i + 1)
+            result['subspecies'] = _format_epithet(subs_zone)
+            break
 
-    elif rankid == 240:  # variety
-        for i, t in enumerate(parts):
-            if _norm(t) in ('var', 'v'):
-                var_zone = _collect_zone(i + 1)
-                result['variety'] = _format_epithet(var_zone)
-                break
+    # Variety
+    for i, t in enumerate(parts):
+        if _norm(t) in ('var', 'v'):
+            var_zone = _collect_zone(i + 1)
+            result['variety'] = _format_epithet(var_zone)
+            break
 
-    elif rankid == 260:  # forma
-        for i, t in enumerate(parts):
-            if _norm(t) in ('forma', 'f'):
-                f_zone = _collect_zone(i + 1)
-                result['forma'] = f_zone[0] if f_zone else ''
-                break
+    # Forma
+    for i, t in enumerate(parts):
+        if _norm(t) in ('forma', 'f'):
+            f_zone = _collect_zone(i + 1)
+            result['forma'] = _format_epithet(f_zone)
+            break
 
     return pd.Series(result)
 
