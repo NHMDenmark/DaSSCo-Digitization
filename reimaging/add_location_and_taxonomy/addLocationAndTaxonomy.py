@@ -50,6 +50,7 @@ def search_barcode_in_csv(barcode, directory):
                             matching_row = digiapp_exports_df[digiapp_exports_df['catalognumber_trimmed'] == barcode_trimmed]
                             return {
                                 'filename': file,
+                                'familyname': matching_row['familyname'].values[0] if 'familyname' in matching_row.columns else None,
                                 'taxonfullname': matching_row['taxonfullname'].values[0] if 'taxonfullname' in matching_row.columns else None,
                                 'storagefullname': matching_row['storagefullname'].values[0] if 'storagefullname' in matching_row.columns else None,
                                 'storagename': matching_row['storagename'].values[0] if 'storagename' in matching_row.columns else None
@@ -144,6 +145,7 @@ def read_specimens_xlsx(file_path, base_directory, db_directory):
                 print(f"Skipping DigiApp search for AU_Herbarium (Workstation: {row['Workstation']})")
                 return pd.Series({
                     'filename': None,
+                    'familyname': None,
                     'taxonfullname': None,
                     'storagefullname': None,
                     'storagename': None
@@ -157,7 +159,7 @@ def read_specimens_xlsx(file_path, base_directory, db_directory):
                 barcode_list = [row['Barcode']]
 
             if not barcode_list:
-                return pd.Series({'filename': None, 'taxonfullname': None, 'storagefullname': None, 'storagename': None})
+                return pd.Series({'filename': None, 'familyname': None, 'taxonfullname': None, 'storagefullname': None, 'storagename': None})
 
             if collection:
                 directory = os.path.join(base_directory, '6.Archive', collection)
@@ -165,7 +167,7 @@ def read_specimens_xlsx(file_path, base_directory, db_directory):
                 if result:
                     return pd.Series(result)
 
-            return pd.Series({'filename': None, 'taxonfullname': None, 'storagefullname': None, 'storagename': None})
+            return pd.Series({'filename': None, 'familyname': None, 'taxonfullname': None, 'storagefullname': None, 'storagename': None})
 
         extracted_data = df.apply(search_and_extract, axis=1)
         new_df = pd.concat([df, extracted_data], axis=1)
@@ -177,7 +179,7 @@ def read_specimens_xlsx(file_path, base_directory, db_directory):
         new_df['digitizer_comment'] = ''  # create new blank column for tracking digitizer comments during reimaging
 
         # Define preferred column order
-        preferred_order = ['reimaged', 'date_reimaged', 'Barcode', 'taxonfullname', 'storagename', 'Follow-up Action Required']
+        preferred_order = ['reimaged', 'date_reimaged', 'Barcode', 'familyname', 'taxonfullname', 'storagefullname', 'storagename', 'Follow-up Action Required']
 
         # Keep preferred columns first (if they exist), then all remaining columns
         ordered_cols = [col for col in preferred_order if col in new_df.columns] + \
