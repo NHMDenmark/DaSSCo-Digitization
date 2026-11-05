@@ -290,9 +290,9 @@ for filename in os.listdir(folder_path):
         updated_filename = re.sub(r'checked(_corrected)?\.csv$', 'processed.tsv', filename)
 
         # Extract qualifiers from 'taxonfullname' (e.g., cf., aff., sp.)
-        qual = df['taxonfullname'].str.extract(r'\b(cf|aff|indet)(\.?)(?=\s|$|[,.])', expand=True)
+        qual = df['taxonfullname'].str.extract(r'\b(cf|aff)(\.?)(?=\s|$|[,.])', expand=True)
         df['qualifier'] = qual[0] + qual[1]
-        df['taxonfullname'] = df['taxonfullname'].str.replace(r'\b(cf|aff|indet)(\.?)(?=\s|$|[,.])\s*', '', regex=True)
+        df['taxonfullname'] = df['taxonfullname'].str.replace(r'\b(cf|aff)(\.?)(?=\s|$|[,.])\s*', '', regex=True)
         df['taxonfullname'] = df['taxonfullname'].str.replace(r'\s{2,}', ' ', regex=True).str.strip()
 
         # --- Validate rankid before processing ---
