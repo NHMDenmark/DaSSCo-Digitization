@@ -257,6 +257,30 @@ def extract_phrases_from_notes(df):
 
     return df
 
+def extract_verbatim_taxon(df):
+    verbatim_pattern = (
+        r'\bindet\.?(?=\s|$|[,;])'
+        r'|\bined\.?(?=\s|$|[,;])'
+        r'|\bprov\.?(?=\s|$|[,;])'
+        r'|\bnom\.?\s+illeg\.?\s+superfl\.?(?=\s|$|[,;])'
+        r'|\bin\s+sched\.?(?=\s|$|[,;])'
+        r'|\b(cf|aff)\.?(?=\s)'
+        r'|\bsp\.?(?=\s|$|[,;])'
+    )
+
+    df['verbatim_taxon'] = ''
+
+    mask = df['taxonfullname'].str.contains(
+        verbatim_pattern,
+        case=False,
+        regex=True,
+        na=False
+    )
+
+    df.loc[mask, 'verbatim_taxon'] = df.loc[mask, 'taxonfullname']
+
+    return df
+
 # Loop through each CSV file in the specified folder_path
 for filename in os.listdir(folder_path):
     # Check if the file is a CSV file
@@ -289,11 +313,43 @@ for filename in os.listdir(folder_path):
         # Modify the filename to replace 'checked' or 'checked_corrected' with 'processed.tsv'
         updated_filename = re.sub(r'checked(_corrected)?\.csv$', 'processed.tsv', filename)
 
-        # Extract qualifiers from 'taxonfullname' (e.g., cf., aff., sp.)
-        qual = df['taxonfullname'].str.extract(r'\b(cf|aff)(\.?)(?=\s|$|[,.])', expand=True)
-        df['qualifier'] = qual[0] + qual[1]
-        df['taxonfullname'] = df['taxonfullname'].str.replace(r'\b(cf|aff)(\.?)(?=\s|$|[,.])\s*', '', regex=True)
-        df['taxonfullname'] = df['taxonfullname'].str.replace(r'\s{2,}', ' ', regex=True).str.strip()
+        # Extract verbatim taxon before modifying taxonfullname
+        df = extract_verbatim_taxon(df)
+
+        # Extract qualifiers from taxonfullname (cf., aff.)
+        qual = df['taxonfullname'].str.extract(
+            r'\b(cf|aff)(\.?)(?=\s|$|[,.])',
+            expand=True
+        )
+
+        df['qualifier'] = qual[0].fillna('') + qual[1].fillna('')
+
+        # Remove verbatim terms from taxonfullname
+        remove_pattern = (
+            r'\bindet\.?(?=\s|$|[,;])'
+            r'|\bined\.?(?=\s|$|[,;])'
+            r'|\bprov\.?(?=\s|$|[,;])'
+            r'|\bnom\.?\s+illeg\.?\s+superfl\.?(?=\s|$|[,;])'
+            r'|\bin\s+sched\.?(?=\s|$|[,;])'
+            r'|\bss\.?(?=\s|$|[,;])'
+            r'|\b(cf|aff|sp)\s*\.?'
+        )
+
+        df['taxonfullname'] = df['taxonfullname'].str.replace(
+            remove_pattern,
+            '',
+            regex=True,
+            case=False
+        )
+
+        # Clean up extra spaces and punctuation left behind
+        df['taxonfullname'] = df['taxonfullname'].str.replace(
+            r'\s{2,}',
+            ' ',
+            regex=True
+        ).str.strip()
+
+        df['taxonfullname'] = df['taxonfullname'].str.strip(' ,.;')
 
         # --- Validate rankid before processing ---
         missing_rankid = df['rankid'].isna()
@@ -408,7 +464,7 @@ for filename in os.listdir(folder_path):
             'publish', 'containername', 'containertype', 'remarks', 'remark_date', 'remark_source', 'family', 'genus',
             'genus_author', 'newgenusflag', 'species', 'species_author', 'newspeciesflag', 'ishybrid_species', 'subspecies', 
             'subspecies_author', 'newsubspeciesflag', 'ishybrid_subspecies', 'variety', 'variety_author', 'newvarietyflag', 
-            'ishybrid_variety', 'forma', 'forma_author', 'newformaflag', 'ishybrid_forma', 'qualifier', 'addendum', 
+            'ishybrid_variety', 'forma', 'forma_author', 'newformaflag', 'ishybrid_forma', 'verbatim_taxon', 'qualifier', 'addendum', 
             'typestatusname', 'storedunder', 'localityname', 'broadgeographicalregion', 'localitynotes', 'preptypename', 
             'count', 'site/building', 'collection', 'room', 'aisle', 'cabinet', 'shelf', 'box', 'datafile_remark', 'datafile_source', 'datafile_date'
         ]
